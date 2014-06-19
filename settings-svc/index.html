@@ -117,8 +117,13 @@ Remains TBD for now.
 <section>
 <h2>Feature Switches</h2>
 <p>
-Supports feature switches and rollout-schedules for multiple models, such as standard feature roll-out (RMC model), A/B testing, and canary deployments. Switch "selector" types include:
+Supports feature switches and rollout schedules for multiple models, such as on/off, incremental feature roll-out (RMC/SOProp model), A/B testing, and canary deployments. 
 </p>
+</section>
+
+
+<section>
+<h2>Feature Switch Selector Types</h2>
 <p>
 <ul>
 <li>Unconditional On/Off: simple "on" or "off" based on feature value</li>
@@ -144,6 +149,7 @@ Supports feature switches and rollout-schedules for multiple models, such as sta
 <p>
 <ul>
 <li>Feature switches configured as JSON objects, retrieved from Settings Service via a REST web service, then cached and evaluated in the client</li>
+<li>Will be able to update feature switches without redeploying either your app or Settings Service - mechanism still being developed</li>
 <li>Features are identified by application id and feature name, but the same feature can be shared across applications if desired</li>
 <li>Feature JSON currently hand coded - validation UI included
 <ul>
