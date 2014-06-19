@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Settings Service</title>
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.min.css">
+		<link rel="stylesheet" href="css/theme/default.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+		<script>
+			if( window.location.search.match( /print-pdf/gi ) ) {
+				var link = document.createElement( 'link' );
+				link.rel = 'stylesheet';
+				link.type = 'text/css';
+				link.href = 'css/print/pdf.css';
+				document.getElementsByTagName( 'head' )[0].appendChild( link );
+			}
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section>
+					<h1>Settings Service</h1>
+					<h3>Settings and Feature Switches</h3>
+					<p>
+						<small>Chris Youngclaus</small>
+					</p>
+					<p>
+						<small>and</small>
+					</p>
+					<p>
+						<small>Martin Romano</small>
+					</p>
+				</section>
+
+				<section>
+					<h2>Problem</h2>
+					<p>
+						Applications often need to store/retrieve user-specific data that are not truly attributes of the user. The data is not part of the system of record for the application, and the application should continue to function correctly if this information is not available for a specific user. For example:
+					</p>
+<p>
+
+<ul>
+<li>Last requested sort order or selected filter options</li>
+<li>A user's membership in a particular group for an A/B test</li>
+<li>A controlled roll-out to determine if a user should see a new feature</li>
+</ul>
+</p>
+
+				</section>
+
+
+<section>
+<h2>What Settings Service Does</h2>
+<p>Stores and retrieves:</p>
+
+<ul>
+<li>Application-level attributes that can be used for information or configuration (example: social media authentication credentials used at the application level)</li>
+<li>Account-level and user-level attributes related to a specific account or user (example:  preferred color palate used for editing emails or campaign documents)</li>
+<li>Features switches - controls roll-out schedules for introducing new features (example:  phased introduction to the new Toolkit UX or templates)</li>
+</ul>
+</p>
+
+</section>
+<section>
+<h2>What It Doesn't Do</h2>
+<p>
+<ul>
+<li>Not a system-of-record for storing core application data</li>
+<li>Does not support reporting/tracking use cases or ad-hoc queries</li>
+</ul>
+</p>
+</section>
+
+<section>
+<h2>Unified Linear Create?</h2>
+<p>
+The ULC discussions are spec'ing a number of items that currently look like Settings Service settings.</p>
+<p>
+Remains TBD for now.
+</p>
+</section>
+
+<section>
+<h2>Settings</h2>
+<p>
+<ul>
+<li>Defined at the application-level, at the account-level within a specific application, or at the user-level within a specific application and account</li>
+<li>Stored as name/value pairs and represented as string values in the MySQL database</li>
+<li>Can be retrieved as a collection, or individually by name</li>
+<li>Values can be up to 1000 characters at the application-level, or up to 256 characters at the account-level or user-level</li>
+</ul>
+</p>
+
+</section>
+
+<section>
+<h2>Feature Switches</h2>
+<p>
+Supports feature switches and rollout-schedules for multiple models, such as standard feature roll-out (RMC model), A/B testing, and canary deployments. Switch "selector" types include:
+</p>
+<p>
+<ul>
+<li>Unconditional On/Off: simple "on" or "off" based on feature value</li>
+<li>Account ID: "on" if account matches specific value from a list of account IDs</li>
+<li>Account percentage: "on" for a given percentage of accounts (hashed: consistent within feature, but random across features)</li>
+<li>Application setting: "on" if a specified application setting is present in the DB</li>
+<li>Server IP: "on" if the calling app's server IP matches</li>
+<li>These values can be negated and "and"-ed or "or"-ed with other selectors</li>
+</ul>
+</p>
+
+</section>
+<section>
+<h2>Feature Switches</h2>
+<p>
+<img src="FeatureDomain.gif">
+</p>
+
+</section>
+
+<section>
+<h2>Feature Configuration</h2>
+<p>
+<ul>
+<li>Feature switches configured as JSON objects, retrieved from Settings Service via a REST web service, then cached and evaluated in the client</li>
+<li>Features are identified by application id and feature name, but the same feature can be shared across applications if desired</li>
+<li>Feature JSON currently hand coded - validation UI included
+<ul>
+<li>May provide UI for editing in future release</li>
+</ul></li>
+</ul>
+</p>
+
+</section>
+
+<section>
+<h2>Current Status</h2>
+<p>
+<ul>
+<li>In production except for feature switch definition deployment</li>
+<li>Used in production by Galileo</li>
+<li>EM-UI and Social Connect are developing integratons</li>
+<li>Feature JSON currently hand coded - validation UI included
+</p>
+</section>
+
+<section>
+<h2>Application Architecture</h2>
+<p>
+<ul>
+<li>Java, Spring framework, REST web services, JSON objects</li>
+<li>MySQL database, using Liquibase for schema and data source control
+<ul>
+<li>ULC cases may increase volume and require Cassandra for account/user settings</li>
+</ul>
+</li>
+<li>Java Client application with client REST service calls
+<ul><li>Ruby client in future release</li></ul>
+</li>
+<li>Application server caching (Memcached) and client application caching (EhCache)</li>
+<li>Monitoring with StatsD and Grafana Dashboard</li>
+
+</p>
+</section>
+
+<section>
+<h2>Feature Switch Example</h2>
+<p>
+An app wants to release a new feature, and would like to introduce this to specific accounts, followed by an incremental rollout over some time period
+<ul>
+<li>Phase 1 - unconditional "off" for all accounts</li>
+<li>Phase 2 - "on" for test accounts</li>
+<li>Phase 3 - "on" for 20% of accounts</li>
+<li>...</li>
+<li>Final phase - "on" for all accounts</li>
+
+</p>
+</section>
+
+
+<section>
+<h2>Phase 1 Example</h2>
+<p>
+<pre>
+<code data-trim contenteditable>
+{   "application_id"          : "my-app",
+    "feature_description"     : "phase 1 - unconditional off for all accounts ",
+    "feature_name"            : "Cool new feature",
+    "feature_selectorlist"    :  
+    [
+        {   "selector_type"     : "unconditional",
+            "selector_value"    : "off"
+        }    
+    ]     
+}
+
+</code>
+</pre>
+</p>
+</section>
+
+<section>
+<h2>Phase 2 Example</h2>
+<p>
+<pre>
+<code data-trim contenteditable>
+{   "application_id"          : "my-app",
+    "feature_description"     : "phase 2 - on for selected accounts ",
+    "feature_name"            : "Cool new feature",
+    "feature_selectorlist"    :  
+    [
+        {   "selector_type"      : "accountlist",
+            "selector_valuelist" : ["1900377702222","1900377701111","190037770333"]
+        }
+    ]
+}
+</code>
+</pre>
+</p>
+</section>
+
+<section>
+<h2>Phase 3 Example</h2>
+<p>
+<pre>
+<code data-trim contenteditable>
+{   "application_id"          : "my-app",
+    "feature_description"     : "phase 3 - on for 20% all accounts ",
+    "feature_name"            : "Cool new feature",
+    "feature_selectorlist"    :  
+    [
+        {   "selector_type"   : "accountpercentage",
+            "selector_value"  : "20"        
+        }
+   
+    ]     
+}
+
+</code>
+</pre>
+</p>
+</section>
+
+
+				<section>
+					<h1>THE END</h1>
+					<h3>Questions?</h3>
+				</section>
+
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.min.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+				transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
